@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import api from '../lib/apiClient'
-import { useClinic } from '../context/ClinicContext'
+import { useAuth } from '../context/AuthContext'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 
@@ -358,8 +358,8 @@ function PriceItemForm({ initial, defaultSubId, onSave, onCancel }) {
 // ── メインページ ──────────────────────────────────────────────────────────────
 
 export default function MenuManagement() {
-  const { selectedClinic } = useClinic()
-  const clinicId = selectedClinic?.id || 1
+  const { user } = useAuth()
+  const clinicId = user?.current_clinic_id || 1
 
   const [tree, setTree] = useState([])
   const [loading, setLoading] = useState(true)

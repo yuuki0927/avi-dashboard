@@ -1,11 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../lib/apiClient'
 
-const DEFAULT_NAV = [
+const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
+// クリニックモード用ナビ（デフォルト順）
+const CLINIC_NAV_DEFAULT = [
   {
+    id: 'dashboard',
     path: '/',
-    label: 'ホーム',
+    label: 'ダッシュボード',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -13,6 +18,7 @@ const DEFAULT_NAV = [
     ),
   },
   {
+    id: 'campaigns',
     path: '/campaigns',
     label: 'キャンペーン',
     icon: (
@@ -22,6 +28,7 @@ const DEFAULT_NAV = [
     ),
   },
   {
+    id: 'customers',
     path: '/customers',
     label: '顧客管理',
     icon: (
@@ -31,6 +38,7 @@ const DEFAULT_NAV = [
     ),
   },
   {
+    id: 'menus',
     path: '/menus',
     label: 'メニュー管理',
     icon: (
@@ -40,6 +48,17 @@ const DEFAULT_NAV = [
     ),
   },
   {
+    id: 'knowledge',
+    path: '/knowledge',
+    label: 'ナレッジベース',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+  },
+  {
+    id: 'analytics',
     path: '/analytics',
     label: '分析',
     icon: (
@@ -49,15 +68,17 @@ const DEFAULT_NAV = [
     ),
   },
   {
-    path: '/clinics',
-    label: '全クリニック管理',
+    id: 'bot-settings',
+    path: '/bot-settings',
+    label: 'ボット設定',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
       </svg>
     ),
   },
   {
+    id: 'settings',
     path: '/settings',
     label: '設定',
     icon: (
@@ -68,61 +89,114 @@ const DEFAULT_NAV = [
     ),
   },
   {
-    path: '/bot-settings',
-    label: 'ボット設定',
+    id: 'clinics',
+    path: '/clinics',
+    label: '店舗管理',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
       </svg>
     ),
   },
 ]
 
+// 全体モード用ナビ（固定）
+const GLOBAL_NAV = [
+  {
+    path: '/',
+    label: '全体ダッシュボード',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    path: '/clinics',
+    label: 'クリニック一覧',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+  },
+  {
+    path: '/invite',
+    label: 'クリニック招待',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+      </svg>
+    ),
+  },
+]
+
+const STORAGE_KEY = 'avi_sidebar_order'
+
 function loadOrder() {
   try {
-    const saved = JSON.parse(localStorage.getItem('sidebar-order') || 'null')
-    if (!Array.isArray(saved)) return DEFAULT_NAV
-    const ordered = saved
-      .map(path => DEFAULT_NAV.find(i => i.path === path))
-      .filter(Boolean)
-    const missing = DEFAULT_NAV.filter(i => !saved.includes(i.path))
-    return [...ordered, ...missing]
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
   } catch {
-    return DEFAULT_NAV
+    return null
   }
 }
 
+function applyOrder(items, order) {
+  if (!order || !Array.isArray(order)) return items
+  const map = Object.fromEntries(items.map(i => [i.id, i]))
+  const sorted = order.map(id => map[id]).filter(Boolean)
+  // append any new items not in saved order
+  const inOrder = new Set(order)
+  items.forEach(i => { if (!inOrder.has(i.id)) sorted.push(i) })
+  return sorted
+}
+
 export default function Sidebar({ isOpen, onClose }) {
-  const { logout } = useAuth()
-  const [editMode, setEditMode] = useState(false)
-  const [navItems, setNavItems] = useState(loadOrder)
-  const dragIdx = useRef(null)
-  const dragOverIdx = useRef(null)
+  const { user, logout } = useAuth()
+  const isSuperAdmin = user?.role === 'super_admin'
+  const [currentClinicName, setCurrentClinicName] = useState('')
+  const [navItems, setNavItems] = useState(() =>
+    applyOrder(CLINIC_NAV_DEFAULT, loadOrder())
+  )
+  const [dragging, setDragging] = useState(null)
+  const dragOver = useRef(null)
 
-  const saveOrder = (items) => {
-    setNavItems(items)
-    localStorage.setItem('sidebar-order', JSON.stringify(items.map(i => i.path)))
-  }
+  useEffect(() => {
+    if (isSuperAdmin || !user?.current_clinic_id) return
+    api.get(`${BASE}/api/group/clinics`)
+      .then(r => {
+        const clinic = (r.data || []).find(c => c.id === user.current_clinic_id)
+        if (clinic) setCurrentClinicName(clinic.name)
+      })
+      .catch(() => {})
+  }, [user?.current_clinic_id, isSuperAdmin])
 
-  const handleDragStart = (e, idx) => {
-    dragIdx.current = idx
+  const items = isSuperAdmin ? GLOBAL_NAV : navItems
+
+  // Drag handlers (clinic nav only)
+  const handleDragStart = (e, index) => {
+    setDragging(index)
     e.dataTransfer.effectAllowed = 'move'
-    // ghost image
-    e.dataTransfer.setDragImage(e.currentTarget, 0, 0)
   }
 
-  const handleDragEnter = (idx) => {
-    if (dragIdx.current === null || dragIdx.current === idx) return
-    const items = [...navItems]
-    const dragged = items.splice(dragIdx.current, 1)[0]
-    items.splice(idx, 0, dragged)
-    dragIdx.current = idx
-    setNavItems(items)
+  const handleDragEnter = (index) => {
+    dragOver.current = index
   }
 
   const handleDragEnd = () => {
-    saveOrder(navItems)
-    dragIdx.current = null
+    if (dragging === null || dragOver.current === null || dragging === dragOver.current) {
+      setDragging(null)
+      dragOver.current = null
+      return
+    }
+    const next = [...navItems]
+    const [moved] = next.splice(dragging, 1)
+    next.splice(dragOver.current, 0, moved)
+    setNavItems(next)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next.map(i => i.id)))
+    setDragging(null)
+    dragOver.current = null
   }
 
   return (
@@ -143,9 +217,11 @@ export default function Sidebar({ isOpen, onClose }) {
           <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">M</span>
           </div>
-          <div>
-            <p className="text-white font-bold text-sm leading-tight">Mediage</p>
-            <p className="text-gray-400 text-xs">管理ダッシュボード</p>
+          <div className="min-w-0">
+            <p className="text-white font-bold text-sm leading-tight">AVI</p>
+            <p className="text-gray-400 text-xs truncate">
+              {isSuperAdmin ? '開発者ポータル' : (currentClinicName || 'クリニック管理')}
+            </p>
           </div>
           <button className="ml-auto text-gray-400 hover:text-white md:hidden" onClick={onClose}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,28 +230,40 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
+        {/* Mode badge */}
+        <div className="px-4 py-2 border-b border-gray-800">
+          <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full font-medium ${
+            isSuperAdmin
+              ? 'bg-gray-800 text-gray-400'
+              : 'bg-primary-900 text-primary-300'
+          }`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+            {isSuperAdmin ? '開発者' : 'クリニック管理者'}
+          </span>
+        </div>
+
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item, idx) => (
-            editMode ? (
-              <div
-                key={item.path}
-                draggable
-                onDragStart={e => handleDragStart(e, idx)}
-                onDragEnter={() => handleDragEnter(idx)}
-                onDragOver={e => e.preventDefault()}
-                onDragEnd={handleDragEnd}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 bg-gray-800 cursor-grab active:cursor-grabbing select-none"
-              >
-                <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                </svg>
-                {item.icon}
-                {item.label}
-              </div>
-            ) : (
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {!isSuperAdmin && (
+            <p className="text-gray-600 text-xs px-3 mb-2 select-none">ドラッグで並び替え可能</p>
+          )}
+          {items.map((item, index) => (
+            <div
+              key={item.id || item.path}
+              draggable={!isSuperAdmin}
+              onDragStart={!isSuperAdmin ? e => handleDragStart(e, index) : undefined}
+              onDragEnter={!isSuperAdmin ? () => handleDragEnter(index) : undefined}
+              onDragEnd={!isSuperAdmin ? handleDragEnd : undefined}
+              onDragOver={e => e.preventDefault()}
+              className={`${
+                !isSuperAdmin && dragging === index ? 'opacity-40' : ''
+              } ${
+                !isSuperAdmin && dragOver.current === index && dragging !== null && dragging !== index
+                  ? 'border-t-2 border-primary-400'
+                  : ''
+              }`}
+            >
               <NavLink
-                key={item.path}
                 to={item.path}
                 end={item.path === '/'}
                 onClick={onClose}
@@ -187,28 +275,24 @@ export default function Sidebar({ isOpen, onClose }) {
                   }`
                 }
               >
+                {!isSuperAdmin && (
+                  <span className="text-gray-600 cursor-grab active:cursor-grabbing flex-shrink-0" title="ドラッグして並び替え">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="9" cy="7" r="1.5"/><circle cx="15" cy="7" r="1.5"/>
+                      <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                      <circle cx="9" cy="17" r="1.5"/><circle cx="15" cy="17" r="1.5"/>
+                    </svg>
+                  </span>
+                )}
                 {item.icon}
                 {item.label}
               </NavLink>
-            )
+            </div>
           ))}
         </nav>
 
         {/* Bottom actions */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">
-          <button
-            onClick={() => setEditMode(m => !m)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              editMode
-                ? 'text-white bg-primary-600'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            {editMode ? '並び替え完了' : '並び替え'}
-          </button>
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"

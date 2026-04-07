@@ -367,6 +367,145 @@ function AddClinicModal({ entityId, entityName, onClose, onDone }) {
   )
 }
 
+// ── 店舗LINE設定パネル（モーダル）────────────────────────────────────────────
+
+const WEBHOOK_URL = `${import.meta.env.VITE_API_BASE_URL || 'https://avi-bot-clinic.fly.dev'}/webhook`
+
+function ShopLinePanel({ clinic, onClose }) {
+  const [masked, setMasked] = useState({ token: '', secret: '' })
+  const [form, setForm] = useState({ channel_access_token: '', channel_secret: '' })
+  const [showToken, setShowToken] = useState(false)
+  const [showSecret, setShowSecret] = useState(false)
+  const [destination, setDestination] = useState(clinic.line_destination || '')
+  const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    api.get(`${BASE}/api/admin/clinics/${clinic.id}/line-settings`)
+      .then(r => {
+        setMasked({
+          token:  r.data.channel_access_token_masked || '',
+          secret: r.data.channel_secret_masked || '',
+        })
+        setDestination(r.data.line_destination || '')
+      })
+      .catch(() => {})
+  }, [clinic.id])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const payload = {}
+      if (form.channel_access_token) payload.channel_access_token = form.channel_access_token
+      if (form.channel_secret)       payload.channel_secret       = form.channel_secret
+      await api.put(`${BASE}/api/admin/clinics/${clinic.id}/line-settings`, payload)
+      const r = await api.get(`${BASE}/api/admin/clinics/${clinic.id}/line-settings`)
+      setMasked({ token: r.data.channel_access_token_masked || '', secret: r.data.channel_secret_masked || '' })
+      setDestination(r.data.line_destination || '')
+      setForm({ channel_access_token: '', channel_secret: '' })
+      setShowToken(false); setShowSecret(false)
+    } catch (e) {
+      alert(e.response?.data?.error || '保存に失敗しました')
+    } finally { setSaving(false) }
+  }
+
+  const test = async () => {
+    setTesting(true); setTestResult(null)
+    try {
+      const res = await api.post(`${BASE}/api/admin/clinics/${clinic.id}/line-settings/test`, { message: 'LINEボット連携テスト ✅' })
+      setTestResult({ success: true, message: res.data.message, destination: res.data.line_destination })
+      if (res.data.line_destination) setDestination(res.data.line_destination)
+    } catch (e) {
+      setTestResult({ success: false, message: e.response?.data?.error || e.message })
+    } finally { setTesting(false) }
+  }
+
+  const copyWebhook = () => {
+    navigator.clipboard.writeText(WEBHOOK_URL)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-gray-900">LINE設定 — {clinic.name}</h3>
+            {destination
+              ? <p className="text-xs text-green-600 mt-0.5">接続済：{destination}</p>
+              : <p className="text-xs text-gray-400 mt-0.5">未接続</p>}
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        </div>
+
+        {/* Webhook URL */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 space-y-1">
+          <p className="text-xs font-semibold text-green-800">Webhook URL（LINE Developersに設定）</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs text-gray-700 break-all bg-white border border-green-100 rounded px-2 py-1">{WEBHOOK_URL}</code>
+            <button onClick={copyWebhook}
+              className={`px-2 py-1 text-xs rounded flex-shrink-0 font-medium transition-colors ${copied ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
+              {copied ? 'コピー済み' : 'コピー'}
+            </button>
+          </div>
+        </div>
+
+        {/* チャネル設定 */}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">チャネルアクセストークン</label>
+            {masked.token && !showToken
+              ? <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-mono">{masked.token}</span>
+                  <button onClick={() => setShowToken(true)} className="text-xs text-primary-600 hover:underline">変更する</button>
+                </div>
+              : <input type="password" value={form.channel_access_token}
+                  onChange={e => setForm(f => ({ ...f, channel_access_token: e.target.value }))}
+                  placeholder="長期アクセストークンを入力"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" />}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">チャネルシークレット</label>
+            {masked.secret && !showSecret
+              ? <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 font-mono">{masked.secret}</span>
+                  <button onClick={() => setShowSecret(true)} className="text-xs text-primary-600 hover:underline">変更する</button>
+                </div>
+              : <input type="password" value={form.channel_secret}
+                  onChange={e => setForm(f => ({ ...f, channel_secret: e.target.value }))}
+                  placeholder="チャネルシークレットを入力"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" />}
+          </div>
+        </div>
+
+        {/* ボタン */}
+        <div className="flex items-center gap-3">
+          <button onClick={test} disabled={testing}
+            className="px-4 py-2 text-sm border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg disabled:opacity-50">
+            {testing ? 'テスト中…' : '連携テスト'}
+          </button>
+          <div className="flex-1" />
+          <button onClick={save} disabled={saving}
+            className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg disabled:opacity-50">
+            {saving ? '保存中…' : '保存'}
+          </button>
+        </div>
+
+        {testResult && (
+          <div className={`rounded-lg p-3 text-sm space-y-1 ${testResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+            <p>{testResult.success ? '✓ ' : '✗ '}{testResult.message}</p>
+            {testResult.destination && (
+              <p className="text-xs font-mono">Bot User ID 自動取得・保存済み：{testResult.destination}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── 法人一覧タブ ──────────────────────────────────────────────────────────────
 
 function LegalEntitiesTab() {
@@ -376,6 +515,7 @@ function LegalEntitiesTab() {
   const [editingEntity, setEditingEntity] = useState(null)
   const [addingClinicTo, setAddingClinicTo] = useState(null) // { id, name }
   const [expanded, setExpanded] = useState({})
+  const [lineSettingClinic, setLineSettingClinic] = useState(null) // { id, name, line_destination }
 
   const load = useCallback(() => {
     setLoading(true)
@@ -462,6 +602,7 @@ function LegalEntitiesTab() {
                           <th className="px-5 py-2 text-left text-gray-400 font-medium">店舗名</th>
                           <th className="px-4 py-2 text-left text-gray-400 font-medium">ステータス</th>
                           <th className="px-4 py-2 text-left text-gray-400 font-medium">LINE</th>
+                          <th className="px-4 py-2"></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -475,8 +616,15 @@ function LegalEntitiesTab() {
                             </td>
                             <td className="px-4 py-2.5">
                               {c.line_destination
-                                ? <span className="text-green-600">設定済</span>
-                                : <span className="text-gray-300">未設定</span>}
+                                ? <span className="text-green-600">接続済</span>
+                                : <span className="text-amber-500">未接続</span>}
+                            </td>
+                            <td className="px-4 py-2.5 text-right">
+                              <button
+                                onClick={() => setLineSettingClinic(c)}
+                                className="text-xs text-primary-600 hover:underline">
+                                LINE設定
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -509,6 +657,12 @@ function LegalEntitiesTab() {
           entityName={addingClinicTo.name}
           onClose={() => setAddingClinicTo(null)}
           onDone={() => { setAddingClinicTo(null); load() }}
+        />
+      )}
+      {lineSettingClinic && (
+        <ShopLinePanel
+          clinic={lineSettingClinic}
+          onClose={() => { setLineSettingClinic(null); load() }}
         />
       )}
     </div>

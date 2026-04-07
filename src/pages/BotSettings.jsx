@@ -343,7 +343,12 @@ function LineTab() {
     setTesting(true); setTestResult(null)
     try {
       const res = await api.post(`${CLINIC_API}/line-settings/test`, { message: 'LINEボット連携テスト ✅' })
-      setTestResult({ success: true, message: res.data.message })
+      const dest = res.data.line_destination
+      setTestResult({
+        success: true,
+        message: res.data.message,
+        destination: dest,
+      })
     } catch (e) {
       setTestResult({ success: false, message: e.response?.data?.error || e.message })
     } finally { setTesting(false) }
@@ -418,8 +423,11 @@ function LineTab() {
         </div>
 
         {testResult && (
-          <div className={`rounded-lg p-3 text-sm ${testResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-            {testResult.success ? '✓ ' : '✗ '}{testResult.message}
+          <div className={`rounded-lg p-3 text-sm space-y-1 ${testResult.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+            <p>{testResult.success ? '✓ ' : '✗ '}{testResult.message}</p>
+            {testResult.destination && (
+              <p className="text-xs font-mono text-green-700">Bot User ID を自動取得・保存しました：{testResult.destination}</p>
+            )}
           </div>
         )}
       </div>

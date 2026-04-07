@@ -15,6 +15,7 @@ import MenuManagement from './pages/MenuManagement'
 import ClinicsManagement from './pages/ClinicsManagement'
 import InviteClinic from './pages/InviteClinic'
 import KnowledgeBase from './pages/KnowledgeBase'
+import PlatformAdmin from './pages/PlatformAdmin'
 import Signup from './pages/Signup'
 import GroupSignup from './pages/GroupSignup'
 
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="bot-settings" element={<BotSettings />} />
         <Route path="knowledge" element={<KnowledgeBase />} />
         <Route path="invite" element={<InviteClinic />} />
+        <Route path="platform" element={<PlatformAdmin />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

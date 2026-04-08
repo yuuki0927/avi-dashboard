@@ -9,7 +9,9 @@ COPY . .
 
 # VITE_ 変数はビルド時に埋め込まれる
 ARG VITE_API_BASE_URL=https://avi-bot-clinic.fly.dev
+ARG VITE_SITE_URL=https://avi-web.net
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_SITE_URL=${VITE_SITE_URL}
 
 RUN npm run build
 

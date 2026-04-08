@@ -100,11 +100,12 @@ const CLINIC_NAV_DEFAULT = [
   },
 ]
 
-// 全体モード用ナビ（固定）
-const GLOBAL_NAV = [
+// 開発者モード用ナビ
+const GLOBAL_NAV_DEFAULT = [
   {
+    id: 'home',
     path: '/',
-    label: '全体ダッシュボード',
+    label: 'ホーム',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -112,30 +113,44 @@ const GLOBAL_NAV = [
     ),
   },
   {
+    id: 'clinics',
     path: '/clinics',
-    label: 'クリニック一覧',
+    label: '顧客一覧',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
       </svg>
     ),
   },
   {
+    id: 'invite',
     path: '/invite',
-    label: 'クリニック招待',
+    label: '招待コードを発行',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'settings',
+    path: '/settings',
+    label: '設定',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
   },
 ]
 
-const STORAGE_KEY = 'avi_sidebar_order'
+const CLINIC_STORAGE_KEY = 'avi_sidebar_order'
+const GLOBAL_STORAGE_KEY = 'avi_global_sidebar_order'
 
-function loadOrder() {
+function loadOrder(key) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
@@ -146,7 +161,6 @@ function applyOrder(items, order) {
   if (!order || !Array.isArray(order)) return items
   const map = Object.fromEntries(items.map(i => [i.id, i]))
   const sorted = order.map(id => map[id]).filter(Boolean)
-  // append any new items not in saved order
   const inOrder = new Set(order)
   items.forEach(i => { if (!inOrder.has(i.id)) sorted.push(i) })
   return sorted
@@ -156,9 +170,13 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth()
   const isSuperAdmin = user?.role === 'super_admin'
   const [currentClinicName, setCurrentClinicName] = useState('')
-  const [navItems, setNavItems] = useState(() =>
-    applyOrder(CLINIC_NAV_DEFAULT, loadOrder())
+  const [clinicNavItems, setClinicNavItems] = useState(() =>
+    applyOrder(CLINIC_NAV_DEFAULT, loadOrder(CLINIC_STORAGE_KEY))
   )
+  const [globalNavItems, setGlobalNavItems] = useState(() =>
+    applyOrder(GLOBAL_NAV_DEFAULT, loadOrder(GLOBAL_STORAGE_KEY))
+  )
+  const [reorderMode, setReorderMode] = useState(false)
   const [dragging, setDragging] = useState(null)
   const dragOver = useRef(null)
 
@@ -172,9 +190,10 @@ export default function Sidebar({ isOpen, onClose }) {
       .catch(() => {})
   }, [user?.current_clinic_id, isSuperAdmin])
 
-  const items = isSuperAdmin ? GLOBAL_NAV : navItems
+  const navItems = isSuperAdmin ? globalNavItems : clinicNavItems
+  const storageKey = isSuperAdmin ? GLOBAL_STORAGE_KEY : CLINIC_STORAGE_KEY
+  const setNavItems = isSuperAdmin ? setGlobalNavItems : setClinicNavItems
 
-  // Drag handlers (clinic nav only)
   const handleDragStart = (e, index) => {
     setDragging(index)
     e.dataTransfer.effectAllowed = 'move'
@@ -194,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }) {
     const [moved] = next.splice(dragging, 1)
     next.splice(dragOver.current, 0, moved)
     setNavItems(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next.map(i => i.id)))
+    localStorage.setItem(storageKey, JSON.stringify(next.map(i => i.id)))
     setDragging(null)
     dragOver.current = null
   }
@@ -215,7 +234,7 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-800">
           <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">M</span>
+            <span className="text-white font-bold text-sm">A</span>
           </div>
           <div className="min-w-0">
             <p className="text-white font-bold text-sm leading-tight">AVI</p>
@@ -244,21 +263,16 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {!isSuperAdmin && (
-            <p className="text-gray-600 text-xs px-3 mb-2 select-none">ドラッグで並び替え可能</p>
-          )}
-          {items.map((item, index) => (
+          {navItems.map((item, index) => (
             <div
               key={item.id || item.path}
-              draggable={!isSuperAdmin}
-              onDragStart={!isSuperAdmin ? e => handleDragStart(e, index) : undefined}
-              onDragEnter={!isSuperAdmin ? () => handleDragEnter(index) : undefined}
-              onDragEnd={!isSuperAdmin ? handleDragEnd : undefined}
-              onDragOver={e => e.preventDefault()}
-              className={`${
-                !isSuperAdmin && dragging === index ? 'opacity-40' : ''
-              } ${
-                !isSuperAdmin && dragOver.current === index && dragging !== null && dragging !== index
+              draggable={reorderMode}
+              onDragStart={reorderMode ? e => handleDragStart(e, index) : undefined}
+              onDragEnter={reorderMode ? () => handleDragEnter(index) : undefined}
+              onDragEnd={reorderMode ? handleDragEnd : undefined}
+              onDragOver={reorderMode ? e => e.preventDefault() : undefined}
+              className={`${reorderMode && dragging === index ? 'opacity-40' : ''} ${
+                reorderMode && dragOver.current === index && dragging !== null && dragging !== index
                   ? 'border-t-2 border-primary-400'
                   : ''
               }`}
@@ -266,17 +280,19 @@ export default function Sidebar({ isOpen, onClose }) {
               <NavLink
                 to={item.path}
                 end={item.path === '/'}
-                onClick={onClose}
+                onClick={reorderMode ? e => e.preventDefault() : onClose}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${isActive
-                    ? 'text-white bg-primary-600'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ${reorderMode
+                    ? 'text-gray-400 bg-gray-800/50 cursor-grab active:cursor-grabbing'
+                    : isActive
+                      ? 'text-white bg-primary-600'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
                   }`
                 }
               >
-                {!isSuperAdmin && (
-                  <span className="text-gray-600 cursor-grab active:cursor-grabbing flex-shrink-0" title="ドラッグして並び替え">
+                {reorderMode && (
+                  <span className="text-gray-500 flex-shrink-0">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                       <circle cx="9" cy="7" r="1.5"/><circle cx="15" cy="7" r="1.5"/>
                       <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
@@ -293,6 +309,29 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Bottom actions */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+          {reorderMode ? (
+            <button
+              onClick={() => setReorderMode(false)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors mb-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              完了
+            </button>
+          ) : (
+            <button
+              onClick={() => setReorderMode(true)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="9" cy="7" r="1.5"/><circle cx="15" cy="7" r="1.5"/>
+                <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                <circle cx="9" cy="17" r="1.5"/><circle cx="15" cy="17" r="1.5"/>
+              </svg>
+              並び替え
+            </button>
+          )}
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"

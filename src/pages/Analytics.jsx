@@ -14,7 +14,7 @@ import {
   customers,
 } from '../data/dummyData'
 
-const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6']
+const COLORS = ['#1B3F80', '#C88A1A', '#10b981', '#F0A820', '#1F4EA8', '#6A97C2']
 
 const TAB_OPTIONS = ['日次', '月次', '年次']
 
@@ -125,8 +125,8 @@ function MonthlySalesDetail() {
           <XAxis dataKey="month" tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
           <Tooltip formatter={v => [`¥${v.toLocaleString()}`]} />
-          <Bar dataKey="sales" fill="#6366f1" radius={[4,4,0,0]} name="今期" />
-          <Bar dataKey="prevYear" fill="#c7d2fe" radius={[4,4,0,0]} name="前年" />
+          <Bar dataKey="sales" fill="#1B3F80" radius={[4,4,0,0]} name="今期" />
+          <Bar dataKey="prevYear" fill="#91B2EB" radius={[4,4,0,0]} name="前年" />
           <Legend />
         </BarChart>
       </ResponsiveContainer>
@@ -165,7 +165,7 @@ function NewRepeatDetail() {
           <XAxis dataKey="month" tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} />
           <Tooltip />
-          <Bar dataKey="new" fill="#6366f1" radius={[4,4,0,0]} name="初診" stackId="a" />
+          <Bar dataKey="new" fill="#1B3F80" radius={[4,4,0,0]} name="初診" stackId="a" />
           <Bar dataKey="repeat" fill="#10b981" radius={[4,4,0,0]} name="再診" stackId="a" />
           <Legend />
         </BarChart>
@@ -333,7 +333,7 @@ function HourlyDetail() {
             <tr key={d.hour} className="border-b border-gray-50">
               <td className="py-2 text-gray-700">{d.hour}</td>
               <td className="text-right py-2 font-semibold">{d.count}件</td>
-              <td className="text-right py-2 text-indigo-600">{d.new}件</td>
+              <td className="text-right py-2 text-primary-600">{d.new}件</td>
               <td className="text-right py-2 text-green-600">{d.repeat}件</td>
             </tr>
           ))}
@@ -524,7 +524,7 @@ export default function Analytics() {
               <XAxis dataKey={salesKey} tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
               <Tooltip formatter={v => [`¥${v.toLocaleString()}`, '売上']} />
-              <Line type="monotone" dataKey="sales" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="sales" stroke="#1B3F80" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           ) : (
             <BarChart data={salesData}>
@@ -532,7 +532,7 @@ export default function Analytics() {
               <XAxis dataKey={salesKey} tick={{ fontSize: 11 }} interval={salesTab === '日次' ? 3 : 0} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
               <Tooltip formatter={v => [`¥${v.toLocaleString()}`, '売上']} />
-              <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="sales" fill="#1B3F80" radius={[4, 4, 0, 0]} />
             </BarChart>
           )}
         </ResponsiveContainer>
@@ -606,7 +606,7 @@ export default function Analytics() {
               <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} />
               <Tooltip formatter={v => [`¥${v.toLocaleString()}`, '売上']} />
-              <Bar dataKey="sales" fill="#6366f1" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="sales" fill="#1B3F80" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -635,7 +635,7 @@ export default function Analytics() {
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
               <Tooltip formatter={(v, name) => [name === 'sales' ? `¥${v.toLocaleString()}` : `${v}名`, name === 'sales' ? '売上' : '担当患者']} />
-              <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]} name="売上" />
+              <Bar dataKey="sales" fill="#1B3F80" radius={[4, 4, 0, 0]} name="売上" />
             </BarChart>
           </ResponsiveContainer>
           <div className="mt-3 space-y-2">
@@ -686,7 +686,7 @@ export default function Analytics() {
             <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} unit="%" />
             <Tooltip />
-            <Bar yAxisId="left" dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} name="売上" />
+            <Bar yAxisId="left" dataKey="revenue" fill="#1B3F80" radius={[4, 4, 0, 0]} name="売上" />
             <Bar yAxisId="right" dataKey="roi" fill="#ec4899" radius={[4, 4, 0, 0]} name="ROI(%)" />
             <Legend />
           </BarChart>

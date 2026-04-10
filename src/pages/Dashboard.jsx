@@ -11,7 +11,7 @@ import {
   newVsRepeatData, monthlySalesData,
 } from '../data/dummyData'
 
-const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6']
+const COLORS = ['#1B3F80', '#C88A1A', '#10b981', '#F0A820', '#1F4EA8']
 
 const today = '2026-03-28'
 
@@ -103,7 +103,7 @@ export default function Dashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={3} />
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${v / 10000}万`} />
                 <Tooltip formatter={v => [`¥${v.toLocaleString()}`, '売上']} />
-                <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="sales" fill="#1B3F80" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -143,7 +143,7 @@ export default function Dashboard() {
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${Math.round(v / 10000)}万`} />
             <Tooltip formatter={v => [`¥${v.toLocaleString()}`, '売上']} />
-            <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]} name="売上" />
+            <Bar dataKey="sales" fill="#1B3F80" radius={[4, 4, 0, 0]} name="売上" />
           </BarChart>
         </ResponsiveContainer>
       </Card>

@@ -1,7 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { MockProvider } from './context/MockContext'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -65,11 +64,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <MockProvider>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </MockProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

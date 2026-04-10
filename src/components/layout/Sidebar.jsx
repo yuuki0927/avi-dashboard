@@ -74,13 +74,12 @@ function loadOrder(key) {
   }
 }
 
-function applySavedOrder(defaults) {
-  const order = loadSavedOrder()
+function applyOrder(defaults, order) {
   if (!order) return defaults
   const map = Object.fromEntries(defaults.map(i => [i.id, i]))
   const sorted = order.map(id => map[id]).filter(Boolean)
   const inOrder = new Set(order)
-  items.forEach(i => { if (!inOrder.has(i.id)) sorted.push(i) })
+  defaults.forEach(i => { if (!inOrder.has(i.id)) sorted.push(i) })
   return sorted
 }
 
@@ -98,16 +97,13 @@ export default function Sidebar({ isOpen, onClose }) {
   const [dragging, setDragging] = useState(null)
   const dragOver = useRef(null)
 
-  const dragIdx = useRef(null)
-  const overIdx = useRef(null)
-
   // 現在のクリニック名を取得
   useEffect(() => {
     if (isSuperAdmin || !user?.current_clinic_id) return
     api.get(`${BASE}/api/group/clinics`)
       .then(r => {
         const c = (r.data || []).find(c => c.id === user.current_clinic_id)
-        if (c) setClinicName(c.name)
+        if (c) setCurrentClinicName(c.name)
       })
       .catch(() => {})
   }, [user?.current_clinic_id, isSuperAdmin])
@@ -132,8 +128,8 @@ export default function Sidebar({ isOpen, onClose }) {
       return
     }
     const next = [...navItems]
-    const [moved] = next.splice(dragIdx.current, 1)
-    next.splice(overIdx.current, 0, moved)
+    const [moved] = next.splice(dragging, 1)
+    next.splice(dragOver.current, 0, moved)
     setNavItems(next)
     localStorage.setItem(storageKey, JSON.stringify(next.map(i => i.id)))
     setDragging(null)
@@ -147,21 +143,21 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
 
       <aside className={`
-        fixed top-0 left-0 h-full z-30 w-64 bg-gray-950 flex flex-col transition-transform duration-200
+        fixed top-0 left-0 h-full z-30 w-64 bg-sidebar flex flex-col transition-transform duration-200
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:z-auto
       `}>
         {/* ロゴ */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-800">
-          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+          <div className="w-9 h-9 bg-accent-400 rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">A</span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white font-bold text-sm leading-tight">AVI</p>
-            <p className="text-gray-400 text-xs truncate">
-              {isSuperAdmin ? '開発者ポータル' : (clinicName || 'クリニック管理')}
+            <p className="text-sidebar-text text-xs truncate">
+              {isSuperAdmin ? '開発者ポータル' : (currentClinicName || 'クリニック管理')}
             </p>
           </div>
-          <button className="ml-auto text-gray-500 hover:text-white md:hidden transition-colors" onClick={onClose}>
+          <button className="ml-auto text-sidebar-text hover:text-white md:hidden transition-colors" onClick={onClose}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -169,9 +165,9 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* モードバッジ */}
-        <div className="px-4 py-2.5 border-b border-gray-800">
+        <div className="px-4 py-2.5 border-b border-sidebar-border">
           <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${
-            isSuperAdmin ? 'bg-gray-800 text-gray-400' : 'bg-primary-900/60 text-primary-300'
+            isSuperAdmin ? 'bg-white/10 text-white' : 'bg-white/10 text-accent-200'
           }`}>
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
             {isSuperAdmin ? '開発者' : 'クリニック管理者'}
@@ -190,7 +186,7 @@ export default function Sidebar({ isOpen, onClose }) {
               onDragOver={reorderMode ? e => e.preventDefault() : undefined}
               className={`${reorderMode && dragging === index ? 'opacity-40' : ''} ${
                 reorderMode && dragOver.current === index && dragging !== null && dragging !== index
-                  ? 'border-t-2 border-primary-400'
+                  ? 'border-t-2 border-white/40'
                   : ''
               }`}
             >
@@ -201,15 +197,15 @@ export default function Sidebar({ isOpen, onClose }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                   ${reorderMode
-                    ? 'text-gray-400 bg-gray-800/50 cursor-grab active:cursor-grabbing'
+                    ? 'text-sidebar-text bg-white/10 cursor-grab active:cursor-grabbing'
                     : isActive
-                      ? 'text-white bg-primary-600'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'text-white bg-sidebar-active'
+                      : 'text-sidebar-text hover:text-white hover:bg-sidebar-hover'
                   }`
                 }
               >
                 {reorderMode && (
-                  <span className="text-gray-500 flex-shrink-0">
+                  <span className="text-sidebar-text flex-shrink-0">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                       <circle cx="9" cy="7" r="1.5"/><circle cx="15" cy="7" r="1.5"/>
                       <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
@@ -225,11 +221,11 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Bottom actions */}
-        <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+        <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
           {reorderMode ? (
             <button
               onClick={() => setReorderMode(false)}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors mb-1"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium bg-white/20 text-white hover:bg-white/30 transition-colors mb-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -239,7 +235,7 @@ export default function Sidebar({ isOpen, onClose }) {
           ) : (
             <button
               onClick={() => setReorderMode(true)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-text hover:text-white hover:bg-sidebar-hover transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="9" cy="7" r="1.5"/><circle cx="15" cy="7" r="1.5"/>
@@ -251,7 +247,7 @@ export default function Sidebar({ isOpen, onClose }) {
           )}
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-text hover:text-white hover:bg-sidebar-hover transition-colors"
           >
             <span className="text-base">🚪</span>
             ログアウト

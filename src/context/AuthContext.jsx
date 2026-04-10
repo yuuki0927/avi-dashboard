@@ -34,6 +34,11 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const loginWithData = useCallback((token, userData) => {
+    setToken(token)
+    setUser(userData)
+  }, [])
+
   const logout = useCallback(async () => {
     const token = getToken()
     if (token) {
@@ -59,7 +64,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, switchClinic, error, loading }}>
+    <AuthContext.Provider value={{ user, login, loginWithData, logout, switchClinic, error, loading }}>
       {children}
     </AuthContext.Provider>
   )

@@ -9,7 +9,7 @@ const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 export default function GroupSignup() {
   const { token } = useParams()
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { loginWithData } = useAuth()
   const [invitation, setInvitation] = useState(null)
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -36,8 +36,8 @@ export default function GroupSignup() {
     setError(''); setSubmitting(true)
     try {
       const res = await axios.post(`${BASE}/api/groups/signup/${token}`, { password, name })
-      // 自動ログイン
-      setToken(res.data.token)
+      // 自動ログイン（ユーザー状態を正しく設定してからリダイレクト）
+      loginWithData(res.data.token, res.data.user)
       setDone(true)
       setTimeout(() => navigate('/'), 1500)
     } catch (e) {

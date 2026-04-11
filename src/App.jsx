@@ -20,6 +20,7 @@ import BulkEdit from './pages/BulkEdit'
 
 // 店舗
 import ClinicHome from './pages/ClinicHome'
+import SalesManagement from './pages/SalesManagement'
 import Campaigns from './pages/Campaigns'
 import Customers from './pages/Customers'
 import MenuManagement from './pages/MenuManagement'
@@ -84,6 +85,7 @@ function AppRoutes() {
 
         {/* 店舗専用 */}
         {isClinic && <>
+          <Route path="sales" element={<SalesManagement />} />
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="customers" element={<Customers />} />
           <Route path="menus" element={<MenuManagement />} />

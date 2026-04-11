@@ -54,10 +54,10 @@ export function AuthProvider({ children }) {
     const token = getToken()
     if (!token) return
     try {
-      await axios.post(`${BASE}/api/auth/switch-clinic`, { clinic_id: clinicId }, {
+      await axios.post(`${BASE}/api/auth/switch-clinic`, { clinic_id: clinicId ?? null }, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setUser(prev => ({ ...prev, current_clinic_id: clinicId }))
+      setUser(prev => ({ ...prev, current_clinic_id: clinicId ?? null }))
     } catch (e) {
       console.error('switch-clinic failed', e)
     }

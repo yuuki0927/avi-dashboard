@@ -98,10 +98,14 @@ const GLOBAL_NAV_DEFAULT = [
   },
 ]
 
-const CLINIC_STORAGE_KEY = 'avi_sidebar_order'
-const GLOBAL_STORAGE_KEY = 'avi_global_sidebar_order'
+function storageKey(user) {
+  if (!user) return null
+  if (user.role === 'super_admin') return `avi_sidebar_global_${user.id}`
+  return `avi_sidebar_clinic_${user.id}_${user.current_clinic_id}`
+}
 
 function loadOrder(key) {
+  if (!key) return null
   try {
     const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
@@ -123,15 +127,17 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth()
   const isSuperAdmin = user?.role === 'super_admin'
   const [currentClinicName, setCurrentClinicName] = useState('')
-  const [clinicNavItems, setClinicNavItems] = useState(() =>
-    applyOrder(CLINIC_NAV_DEFAULT, loadOrder(CLINIC_STORAGE_KEY))
-  )
-  const [globalNavItems, setGlobalNavItems] = useState(() =>
-    applyOrder(GLOBAL_NAV_DEFAULT, loadOrder(GLOBAL_STORAGE_KEY))
-  )
+  const [navItems, setNavItems] = useState(isSuperAdmin ? GLOBAL_NAV_DEFAULT : CLINIC_NAV_DEFAULT)
   const [reorderMode, setReorderMode] = useState(false)
   const [dragging, setDragging] = useState(null)
   const dragOver = useRef(null)
+
+  // ユーザー or クリニックが切り替わったら並び順を再ロード
+  useEffect(() => {
+    const key = storageKey(user)
+    const defaults = isSuperAdmin ? GLOBAL_NAV_DEFAULT : CLINIC_NAV_DEFAULT
+    setNavItems(applyOrder(defaults, loadOrder(key)))
+  }, [user?.id, user?.current_clinic_id, isSuperAdmin])
 
   // 現在のクリニック名を取得
   useEffect(() => {
@@ -143,10 +149,6 @@ export default function Sidebar({ isOpen, onClose }) {
       })
       .catch(() => {})
   }, [user?.current_clinic_id, isSuperAdmin])
-
-  const navItems = isSuperAdmin ? globalNavItems : clinicNavItems
-  const storageKey = isSuperAdmin ? GLOBAL_STORAGE_KEY : CLINIC_STORAGE_KEY
-  const setNavItems = isSuperAdmin ? setGlobalNavItems : setClinicNavItems
 
   const handleDragStart = (e, index) => {
     setDragging(index)
@@ -167,7 +169,7 @@ export default function Sidebar({ isOpen, onClose }) {
     const [moved] = next.splice(dragging, 1)
     next.splice(dragOver.current, 0, moved)
     setNavItems(next)
-    localStorage.setItem(storageKey, JSON.stringify(next.map(i => i.id)))
+    localStorage.setItem(storageKey(user), JSON.stringify(next.map(i => i.id)))
     setDragging(null)
     dragOver.current = null
   }

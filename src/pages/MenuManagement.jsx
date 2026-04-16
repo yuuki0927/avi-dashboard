@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 
-const API = 'http://localhost:5000/api/settings'
+const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const API = `${BASE}/api/settings`
 
 // ── アイコン ──────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import api from '../lib/apiClient'
+import InfoBanner from '../components/ui/InfoBanner'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { useAuth } from '../context/AuthContext'
@@ -68,6 +69,16 @@ function ClinicInfo() {
 function ApiManagement() {
   return (
     <div className="space-y-4">
+      <InfoBanner storageKey="settings-api">
+        <p>ここでは、このシステムが外部サービスと連携するための「APIキー」を確認・管理します。APIキーとは、サービス同士が安全に通信するための「合言葉」のようなものです。外部に漏れないよう大切に管理してください。</p>
+        <p className="font-semibold mt-1">主な連携サービス</p>
+        <ul className="space-y-1 list-none">
+          <li>・<span className="font-medium">LINE</span>：お客様との会話に使うLINE公式アカウントとの接続に必要です</li>
+          <li>・<span className="font-medium">OpenAI</span>：AIボットの頭脳となるサービスです。このキーがないとAIが動きません</li>
+          <li>・<span className="font-medium">Stripe</span>：オンライン決済に使用します（実装予定）</li>
+        </ul>
+        <p>APIキーの実際の変更は、サーバー側の環境変数から行います。管理画面からの変更機能は実装予定です。</p>
+      </InfoBanner>
       <p className="text-sm text-gray-500">外部APIの連携設定を管理します（実装予定）</p>
       <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center">
         <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,21 +91,40 @@ function ApiManagement() {
   )
 }
 
+const PAYMENT_DEFAULTS = [
+  { id: 'cash',    label: '現金',                    icon: '💴', enabled: true },
+  { id: 'card',    label: 'クレジットカード',         icon: '💳', enabled: true },
+  { id: 'ic',      label: '交通系IC（Suica等）',      icon: '🚃', enabled: false },
+  { id: 'qr',      label: 'QRコード決済（PayPay等）', icon: '📱', enabled: true },
+  { id: 'emoney',  label: '電子マネー（iD等）',       icon: '📲', enabled: false },
+  { id: 'medical', label: '医療ローン',               icon: '🏥', enabled: true },
+]
+
+function loadPaymentMethods() {
+  try {
+    const saved = localStorage.getItem('avi_payment_methods')
+    if (!saved) return PAYMENT_DEFAULTS
+    const ids = JSON.parse(saved)
+    return PAYMENT_DEFAULTS.map(m => ({ ...m, enabled: ids.includes(m.id) }))
+  } catch { return PAYMENT_DEFAULTS }
+}
+
 function PaymentSettings() {
-  const [methods, setMethods] = useState([
-    { id: 'cash',    label: '現金',                    icon: '💴', enabled: true },
-    { id: 'card',    label: 'クレジットカード',         icon: '💳', enabled: true },
-    { id: 'ic',      label: '交通系IC（Suica等）',      icon: '🚃', enabled: false },
-    { id: 'qr',      label: 'QRコード決済（PayPay等）', icon: '📱', enabled: true },
-    { id: 'emoney',  label: '電子マネー（iD等）',       icon: '📲', enabled: false },
-    { id: 'medical', label: '医療ローン',                icon: '🏥', enabled: true },
-  ])
+  const [methods, setMethods] = useState(loadPaymentMethods)
   const [saved, setSaved] = useState(false)
   const toggle = (id) => setMethods(prev => prev.map(m => m.id === id ? { ...m, enabled: !m.enabled } : m))
-  const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2000) }
+  const save = () => {
+    localStorage.setItem('avi_payment_methods', JSON.stringify(methods.filter(m => m.enabled).map(m => m.id)))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   return (
     <div className="space-y-4">
+      <InfoBanner storageKey="settings-payment">
+        <p>ここでは、クリニックで対応している支払い方法を設定します。有効にした支払い方法は、お客様がLINEで「支払いはどんな方法が使えますか？」と聞いたとき、AIが正確に案内します。</p>
+        <p>現金・クレジットカード・交通系IC・QRコード決済（PayPay等）など、実際にクリニックで受け付けている方法だけをオンにしてください。対応していない方法が表示されるとトラブルの原因になります。</p>
+      </InfoBanner>
       <p className="text-sm text-gray-500">対応する支払い方法を設定してください</p>
       <div className="space-y-3">
         {methods.map(m => (
@@ -261,25 +291,32 @@ export default function Settings() {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'super_admin'
 
-  const clinicTabs = ['支払い設定', 'Googleカレンダー', 'API管理']
   const adminTabs = ['システム設定', 'メール送信', 'API・連携']
-  const tabs = isSuperAdmin ? adminTabs : clinicTabs
+  const [activeTab, setActiveTab] = useState(adminTabs[0])
 
-  const [activeTab, setActiveTab] = useState(tabs[0])
+  if (!isSuperAdmin) {
+    return (
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">設定</h1>
+          <p className="text-sm text-gray-500 mt-1">設定項目は準備中です</p>
+        </div>
+        <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-12 text-center">
+          <svg className="w-8 h-8 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <p className="text-sm text-gray-400">準備中です</p>
+        </div>
+      </div>
+    )
+  }
 
   const renderContent = () => {
-    if (isSuperAdmin) {
-      switch (activeTab) {
-        case 'システム設定': return <SuperAdminSystemSettings />
-        case 'メール送信': return <SuperAdminEmailSettings />
-        case 'API・連携': return <SuperAdminApiSettings />
-        default: return null
-      }
-    }
     switch (activeTab) {
-      case '支払い設定': return <PaymentSettings />
-      case 'Googleカレンダー': return <GoogleCalendar />
-      case 'API管理': return <ApiManagement />
+      case 'システム設定': return <SuperAdminSystemSettings />
+      case 'メール送信': return <SuperAdminEmailSettings />
+      case 'API・連携': return <SuperAdminApiSettings />
       default: return null
     }
   }
@@ -288,15 +325,11 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">設定</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {isSuperAdmin
-            ? 'システム設定・API連携・メール設定を管理します'
-            : '支払い・API連携などを管理します'}
-        </p>
+        <p className="text-sm text-gray-500 mt-1">システム設定・API連携・メール設定を管理します</p>
       </div>
 
       <div className="flex gap-1 bg-white border border-gray-200 p-1 rounded-xl overflow-x-auto">
-        {tabs.map(tab => (
+        {adminTabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}

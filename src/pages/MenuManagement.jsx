@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import InfoBanner from '../components/ui/InfoBanner'
 import api from '../lib/apiClient'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/ui/Button'
@@ -29,10 +30,13 @@ const IconChevron = ({ open }) => (
 function PriceItemRow({ item, onEdit, onDelete }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
         <span className="text-sm text-gray-800">{item.name}</span>
         {item.size_or_part && (
-          <span className="ml-2 text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">{item.size_or_part}</span>
+          <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">{item.size_or_part}</span>
+        )}
+        {item.requires_form && (
+          <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">問診表必須</span>
         )}
       </div>
       <span className="text-sm font-bold text-primary-600 w-36 text-right flex-shrink-0">
@@ -287,6 +291,7 @@ function PriceItemForm({ initial, defaultSubId, onSave, onCancel }) {
     price: initial?.price ?? '',
     price_display: initial?.price_display || '',
     sub_category_id: defaultSubId || initial?.sub_category_id || '',
+    requires_form: initial?.requires_form || false,
   })
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -340,6 +345,19 @@ function PriceItemForm({ initial, defaultSubId, onSave, onCancel }) {
           placeholder="例：55,000円（税込）"
         />
         <p className="text-xs text-gray-400 mt-1">料金を入力すると自動入力されます。自由に編集可能です。</p>
+      </div>
+      <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
+        <div>
+          <p className="text-sm font-medium text-amber-800">問診表必須</p>
+          <p className="text-xs text-amber-600 mt-0.5">ONにするとLINEで問診表URLを自動案内します</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => set('requires_form', !form.requires_form)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${form.requires_form ? 'bg-amber-500' : 'bg-gray-200'}`}
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.requires_form ? 'translate-x-6' : 'translate-x-1'}`} />
+        </button>
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onCancel}>キャンセル</Button>
@@ -422,6 +440,18 @@ export default function MenuManagement() {
 
   return (
     <div className="space-y-6">
+      <InfoBanner storageKey="menu">
+        <p>ここでは、クリニックで提供している施術メニューの情報を登録・管理できます。登録した内容はAIが正確な情報源として使用します。「ヒアルロン酸はいくらですか？」と聞かれたとき、AIはここに登録された料金をそのままお客様に回答します。</p>
+        <p className="font-semibold mt-1">各設定項目の説明</p>
+        <ul className="space-y-1 list-none">
+          <li>・<span className="font-medium">メニュー名・料金</span>：施術名と価格を入力します。AIはこの情報をもとに料金の質問に答えます</li>
+          <li>・<span className="font-medium">カテゴリ</span>：「注入系」「レーザー」「スキンケア」など、施術の種類を分類します。売上管理でカテゴリ別の分析にも使われます</li>
+          <li>・<span className="font-medium">ダウンタイム</span>：施術後に腫れや赤みが続く期間のことです。「翌日から仕事に行けますか？」などの質問にAIが正確に答えるために使います</li>
+          <li>・<span className="font-medium">問診表必須</span>：これをオンにすると、その施術を希望されたお客様にAIが自動で問診表URLを送ります。アレルギー確認などが必要な施術に活用してください</li>
+          <li>・<span className="font-medium">非公開</span>：一時的に提供を停止したいメニューを隠せます。AIに紹介させたくない施術はここでオフにできます</li>
+        </ul>
+      </InfoBanner>
+
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div>

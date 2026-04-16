@@ -41,12 +41,11 @@ export default function Header({ onMenuClick, onViewChange }) {
     setSwitching(true)
     setOpen(false)
     await switchClinic(clinicId)
-    // 切り替え後、同じパスが相手モードに存在しない場合はホームへ
     const path = location.pathname
     const targetIsCompany = clinicId === null
     const pathExistsInTarget = targetIsCompany
       ? SHARED_PATHS.includes(path) || ['/clinics', '/employees', '/bulk-edit', '/analytics', '/settings'].includes(path)
-      : SHARED_PATHS.includes(path) || ['/campaigns', '/customers', '/menus', '/knowledge', '/bot-settings', '/settings'].includes(path)
+      : SHARED_PATHS.includes(path) || ['/campaigns', '/customers', '/menus', '/bot-settings', '/intake-form', '/settings'].includes(path)
     navigate(pathExistsInTarget ? path : '/')
     setSwitching(false)
     onViewChange?.()

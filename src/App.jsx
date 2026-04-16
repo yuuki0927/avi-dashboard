@@ -24,12 +24,14 @@ import SalesManagement from './pages/SalesManagement'
 import Campaigns from './pages/Campaigns'
 import Customers from './pages/Customers'
 import MenuManagement from './pages/MenuManagement'
-import KnowledgeBase from './pages/KnowledgeBase'
 import BotSettings from './pages/BotSettings'
+import IntakeFormManagement from './pages/IntakeFormManagement'
+import SegmentBroadcast from './pages/SegmentBroadcast'
 
 // 共通
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
+import PublicIntakeForm from './pages/PublicIntakeForm'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -54,6 +56,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/form/:clinicId" element={<PublicIntakeForm />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup/clinic/:token" element={<Signup />} />
       <Route path="/signup/:token" element={<Signup />} />
@@ -89,8 +92,9 @@ function AppRoutes() {
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="customers" element={<Customers />} />
           <Route path="menus" element={<MenuManagement />} />
-          <Route path="knowledge" element={<KnowledgeBase />} />
           <Route path="bot-settings" element={<BotSettings />} />
+          <Route path="intake-form" element={<IntakeFormManagement />} />
+          <Route path="broadcast" element={<SegmentBroadcast />} />
         </>}
 
         {/* 共通 */}

@@ -6,88 +6,35 @@ import {
 import StatCard from '../components/ui/StatCard'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
-import {
-  dailySalesData, monthlySalesData, yearlySalesData,
-  treatmentSalesData, doctorSalesData, counselorSalesData,
-  repeatRateData, churnRateData, hourlyAppointments,
-  ageDistribution, newVsRepeatData, campaignROIData,
-  customers,
-} from '../data/dummyData'
-
 const COLORS = ['#1B3F80', '#C88A1A', '#10b981', '#F0A820', '#1F4EA8', '#6A97C2']
 
 const TAB_OPTIONS = ['日次', '月次', '年次']
 
-// ── 詳細データ（ダミー）────────────────────────────────────────────────────
-const monthlySalesDetail = monthlySalesData.map(d => ({
-  ...d,
-  prevYear: Math.round(d.sales * (0.78 + Math.random() * 0.15)),
-  yoy: null,
-})).map(d => ({ ...d, yoy: Math.round(((d.sales - d.prevYear) / d.prevYear) * 100) }))
+// ── プレースホルダーデータ（売上連携後に実データへ移行予定）────────────────
+const dailySalesData = []
+const monthlySalesData = []
+const yearlySalesData = []
+const treatmentSalesData = []
+const doctorSalesData = []
+const counselorSalesData = []
+const repeatRateData = []
+const churnRateData = []
+const hourlyAppointments = []
+const ageDistribution = []
+const newVsRepeatData = []
+const campaignROIData = []
+const customers = []
 
-const newVsRepeatMonthly = monthlySalesData.map((d, i) => ({
-  month: d.month,
-  new: 20 + Math.round(Math.random() * 15),
-  repeat: 45 + Math.round(Math.random() * 20),
-}))
-
-const ageDetailData = [
-  { age: '10代', count: 8, revenue: 320000, pct: 5 },
-  { age: '20代', count: 42, revenue: 2100000, pct: 28 },
-  { age: '30代', count: 55, revenue: 3850000, pct: 37 },
-  { age: '40代', count: 30, revenue: 2400000, pct: 20 },
-  { age: '50代', count: 12, revenue: 960000, pct: 8 },
-  { age: '60代以上', count: 3, revenue: 270000, pct: 2 },
-]
-
-const repeatRateMonthly = repeatRateData.map(d => ({
-  ...d,
-  count: 35 + Math.round(Math.random() * 20),
-}))
-
-const churnMonthly = churnRateData.map(d => ({
-  ...d,
-  lost: Math.round(d.rate * 0.6),
-}))
-
-const treatmentSalesAll = [
-  ...treatmentSalesData,
-  { name: 'ケミカルピーリング', sales: 198000 },
-  { name: 'ボトックス（額）', sales: 176000 },
-  { name: 'ビタミン点滴', sales: 148500 },
-  { name: 'プラセンタ注射', sales: 82500 },
-  { name: 'ニキビ治療', sales: 66000 },
-].sort((a, b) => b.sales - a.sales)
-
-const hourlyDetail = hourlyAppointments.map(d => ({
-  ...d,
-  new: Math.round(d.count * 0.35),
-  repeat: Math.round(d.count * 0.65),
-}))
-
-const doctorDetail = doctorSalesData.map(d => ({
-  ...d,
-  treatments: [
-    { name: 'ヒアルロン酸', count: Math.round(d.patients * 0.4), revenue: Math.round(d.sales * 0.45) },
-    { name: 'ボトックス', count: Math.round(d.patients * 0.35), revenue: Math.round(d.sales * 0.3) },
-    { name: 'ハイフ', count: Math.round(d.patients * 0.25), revenue: Math.round(d.sales * 0.25) },
-  ],
-}))
-
-const counselorDetail = counselorSalesData.map(d => ({
-  ...d,
-  treatments: [
-    { name: 'カウンセリング', count: Math.round(d.patients * 0.6), revenue: Math.round(d.sales * 0.4) },
-    { name: 'スキンケア', count: Math.round(d.patients * 0.4), revenue: Math.round(d.sales * 0.6) },
-  ],
-}))
-
-const campaignROIDetail = campaignROIData.map(d => ({
-  ...d,
-  clicks: Math.round(d.revenue / 3000),
-  conversions: Math.round(d.revenue / 15000),
-  cpa: Math.round(d.investment / Math.max(1, Math.round(d.revenue / 15000))),
-}))
+const monthlySalesDetail = []
+const newVsRepeatMonthly = []
+const ageDetailData = []
+const repeatRateMonthly = []
+const churnMonthly = []
+const treatmentSalesAll = []
+const hourlyDetail = []
+const doctorDetail = []
+const counselorDetail = []
+const campaignROIDetail = []
 
 // ── ユーティリティ ────────────────────────────────────────────────────────
 

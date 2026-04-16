@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
-import { campaigns as initialCampaigns } from '../data/dummyData'
+import React, { useState, useEffect, useRef } from 'react'
+import InfoBanner from '../components/ui/InfoBanner'
+import api from '../lib/apiClient'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
+
+const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const TARGET_OPTIONS = ['全員', '初診限定', 'リピーター限定', 'VIPタグ', 'タグ指定']
 
@@ -71,11 +74,16 @@ function CampaignForm({ initial, onSave, onCancel }) {
     target: '全員',
     maxUses: 100, maxUsesUnlimited: false,
     usedCount: 0, status: 'active',
+    image_url: '',
     abPatterns: [
       { label: 'パターンA', title: '', ctr: 0, cvr: 0 },
       { label: 'パターンB', title: '', ctr: 0, cvr: 0 },
     ],
   })
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(initial?.image_url || '')
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const setAB = (i, k, v) => setForm(f => {
@@ -83,6 +91,36 @@ function CampaignForm({ initial, onSave, onCancel }) {
     ab[i] = { ...ab[i], [k]: v }
     return { ...f, abPatterns: ab }
   })
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleSave = async () => {
+    const saved = await onSave(form)
+    // 画像ファイルがある場合、保存後にアップロード
+    if (imageFile && saved?.id) {
+      setUploading(true)
+      try {
+        const fd = new FormData()
+        fd.append('image', imageFile)
+        const res = await fetch(`${BASE}/api/settings/campaigns/${saved.id}/image`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('avi_token')}` },
+          body: fd,
+        })
+        const data = await res.json()
+        if (data.image_url) set('image_url', data.image_url)
+      } catch (e) {
+        console.error('Image upload failed', e)
+      } finally {
+        setUploading(false)
+      }
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -174,9 +212,47 @@ function CampaignForm({ initial, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* 画像アップロード */}
+      <div>
+        <label className="label">LINE送信用画像（任意）</label>
+        <p className="text-xs text-gray-400 mb-2">設定するとAIがキャンペーンを紹介した際にLINEで画像も送信されます</p>
+        <div
+          className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-primary-300 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {imagePreview ? (
+            <div className="relative inline-block">
+              <img src={imagePreview} alt="preview" className="max-h-40 rounded-lg mx-auto" />
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(''); set('image_url', '') }}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+              >×</button>
+            </div>
+          ) : (
+            <div className="py-4">
+              <svg className="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm text-gray-400">クリックして画像を選択</p>
+              <p className="text-xs text-gray-300 mt-1">JPG・PNG・GIF・WebP</p>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleImageChange}
+        />
+      </div>
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="secondary" onClick={onCancel}>キャンセル</Button>
-        <Button variant="primary" onClick={() => onSave(form)}>保存</Button>
+        <Button variant="primary" onClick={handleSave} disabled={uploading}>
+          {uploading ? 'アップロード中...' : '保存'}
+        </Button>
       </div>
     </div>
   )
@@ -184,22 +260,50 @@ function CampaignForm({ initial, onSave, onCancel }) {
 
 // ── メイン ─────────────────────────────────────────────────────────────────
 export default function Campaigns() {
-  const [list, setList] = useState(initialCampaigns)
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
-  const handleAdd = (form) => {
-    setList(prev => [...prev, { ...form, id: Date.now() }])
+  const load = () => {
+    api.get(`${BASE}/api/settings/campaigns`)
+      .then(r => setList(r.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [])
+
+  const handleAdd = async (form) => {
+    const res = await api.post(`${BASE}/api/settings/campaigns`, {
+      title: form.title,
+      content: form.description,
+      price_info: form.price,
+      target: form.target,
+      enabled: form.status === 'active' ? 1 : 0,
+    })
+    const saved = { ...form, id: res.data.id }
+    setList(prev => [...prev, saved])
     setShowAdd(false)
+    return saved
   }
 
-  const handleEdit = (form) => {
+  const handleEdit = async (form) => {
+    await api.put(`${BASE}/api/settings/campaigns/${form.id}`, {
+      title: form.title,
+      content: form.description,
+      price_info: form.price,
+      target: form.target,
+      enabled: form.status === 'active' ? 1 : 0,
+      image_url: form.image_url,
+    })
     setList(prev => prev.map(c => c.id === form.id ? form : c))
     setEditTarget(null)
+    return form
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    await api.delete(`${BASE}/api/settings/campaigns/${deleteTarget.id}`)
     setList(prev => prev.filter(c => c.id !== deleteTarget.id))
     setDeleteTarget(null)
   }
@@ -208,6 +312,19 @@ export default function Campaigns() {
 
   return (
     <div className="space-y-6">
+      <InfoBanner storageKey="campaigns">
+        <p>ここでは、クリニックのお得な情報（キャンペーン）を登録・管理できます。登録したキャンペーンは、お客様がLINEでAIと会話している中で自動的に紹介されます。スタッフが毎回説明しなくてもAIが24時間対応してくれるので、機会損失を防げます。</p>
+        <p className="font-semibold mt-1">各設定項目の説明</p>
+        <ul className="space-y-1 list-none">
+          <li>・<span className="font-medium">タイトル／内容</span>：「今月限定！ヒアルロン酸20%オフ」など、キャンペーンの名前と詳細を入力します</li>
+          <li>・<span className="font-medium">対象顧客</span>：「全員」「初診限定（初めてのお客様だけ）」「リピーター限定（2回目以降のお客様）」など、誰に紹介するかを選べます</li>
+          <li>・<span className="font-medium">有効期間</span>：キャンペーンの開始日と終了日を設定します。期間外は自動的に紹介されなくなります</li>
+          <li>・<span className="font-medium">利用上限数</span>：「先着10名様まで」のように上限を設定できます。0は無制限です</li>
+          <li>・<span className="font-medium">A/Bテスト</span>：2種類の文章を用意して、どちらがより多くのお客様に響くかを自動で比較する機能です（例：「20%オフ」vs「2,000円引き」どちらの表現が予約につながるかを測定できます）</li>
+          <li>・<span className="font-medium">画像</span>：キャンペーン画像を登録しておくと、AIが紹介する際にLINE上で画像も一緒に送信されます</li>
+        </ul>
+      </InfoBanner>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">キャンペーン管理</h1>
@@ -221,6 +338,13 @@ export default function Campaigns() {
         </Button>
       </div>
 
+      {loading && <p className="text-sm text-gray-400 text-center py-8">読み込み中...</p>}
+      {!loading && list.length === 0 && (
+        <div className="text-center py-12 text-gray-400">
+          <p className="text-sm">キャンペーンがありません</p>
+          <p className="text-xs mt-1">「新規追加」から登録してください</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {list.map(c => {
           const isUnlimited = c.maxUsesUnlimited
@@ -257,9 +381,12 @@ export default function Campaigns() {
                 </div>
               </div>
 
+              {c.image_url && (
+                <img src={c.image_url} alt={c.title} className="w-full h-32 object-cover rounded-lg mb-3" />
+              )}
               <h3 className="text-base font-semibold text-gray-900 mb-1">{c.title}</h3>
-              <p className="text-sm text-gray-600 mb-1">{c.description}</p>
-              <p className="text-sm font-medium text-primary-600 mb-3">{c.price}</p>
+              <p className="text-sm text-gray-600 mb-1">{c.content || c.description}</p>
+              <p className="text-sm font-medium text-primary-600 mb-3">{c.price_info || c.price}</p>
 
               <div className="text-xs text-gray-500 mb-3">
                 <span>{c.startDate}</span> 〜 <span className={c.endDateUndecided ? 'text-yellow-600 font-medium' : ''}>{endLabel}</span>

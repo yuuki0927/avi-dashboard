@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 export default function PublicIntakeForm() {
-  const { clinicId } = useParams()
+  const { token } = useParams()
   const [form, setForm]       = useState(null)
   const [answers, setAnswers] = useState({})
   const [loading, setLoading] = useState(true)
@@ -13,7 +13,7 @@ export default function PublicIntakeForm() {
   const [error, setError]     = useState('')
 
   useEffect(() => {
-    fetch(`${BASE}/api/public/intake-form/${clinicId}`)
+    fetch(`${BASE}/api/public/intake-form/${token}`)
       .then(r => r.json())
       .then(d => {
         if (d.form) setForm(d.form)
@@ -21,7 +21,7 @@ export default function PublicIntakeForm() {
       })
       .catch(() => setError('フォームの読み込みに失敗しました'))
       .finally(() => setLoading(false))
-  }, [clinicId])
+  }, [token])
 
   const handleChange = (label, value) => {
     setAnswers(prev => ({ ...prev, [label]: value }))

@@ -56,7 +56,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/form/:clinicId" element={<PublicIntakeForm />} />
+      <Route path="/form/:token" element={<PublicIntakeForm />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup/clinic/:token" element={<Signup />} />
       <Route path="/signup/:token" element={<Signup />} />

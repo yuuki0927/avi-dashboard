@@ -35,13 +35,15 @@ function PriceItemRow({ item, onEdit, onDelete }) {
         {item.size_or_part && (
           <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">{item.size_or_part}</span>
         )}
-        {item.requires_form && (
+        {!!item.requires_form && (
           <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">問診表必須</span>
         )}
       </div>
-      <span className="text-sm font-bold text-primary-600 w-36 text-right flex-shrink-0">
-        {item.price_display}
-      </span>
+      {item.price_display && item.price_display !== '0' && (
+        <span className="text-sm font-bold text-primary-600 w-36 text-right flex-shrink-0">
+          {item.price_display}
+        </span>
+      )}
       <div className="flex gap-1 flex-shrink-0">
         <button onClick={onEdit} className="p-1.5 text-gray-300 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
           <IconEdit />
@@ -112,6 +114,7 @@ function SubCategorySection({ sub, isOpen, onToggle, onEdit, onDelete, onAddItem
                 item={item}
                 onEdit={() => onEditItem(item)}
                 onDelete={() => onDeleteItem(item)}
+                onToggleForm={() => onToggleForm(item)}
               />
             ))
           )}

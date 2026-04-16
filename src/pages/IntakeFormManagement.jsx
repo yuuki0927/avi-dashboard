@@ -158,11 +158,15 @@ function FormBuilder({ clinicId }) {
   const [dragOverIndex, setDragOverIndex] = useState(null)
 
   const frontBase = import.meta.env.VITE_FRONT_URL || window.location.origin
-  const publicUrl = `${frontBase}/form/${clinicId}`
+  const [formToken, setFormToken] = useState('')
+  const publicUrl = formToken ? `${frontBase}/form/${formToken}` : ''
 
   useEffect(() => {
     api.get(FORM_API)
-      .then(r => setForm(r.data))
+      .then(r => {
+        setForm(r.data)
+        if (r.data.form_token) setFormToken(r.data.form_token)
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [clinicId])

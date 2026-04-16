@@ -180,112 +180,22 @@ function GoogleCalendar() {
   )
 }
 
-// ── 開発者向け設定 ────────────────────────────────────────────────────────────
-
-function SuperAdminSystemSettings() {
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://avi.tokyo'
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-
-  return (
-    <div className="space-y-5">
-      <div className="space-y-3">
-        {[
-          { label: 'APIベースURL', value: apiBase, desc: 'バックエンドAPIのURL（.env.localで変更）' },
-          { label: 'サイトURL', value: siteUrl, desc: '招待リンクのベースURL（.env.localで変更）' },
-        ].map(item => (
-          <div key={item.label} className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
-              </div>
-              <code className="text-xs bg-white border border-gray-200 rounded px-2 py-1 text-gray-700 flex-shrink-0">
-                {item.value}
-              </code>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-        <p className="text-xs font-medium text-blue-800 mb-1">設定の変更方法</p>
-        <p className="text-xs text-blue-700 leading-relaxed">
-          フロントエンドの設定は <code className="bg-blue-100 px-1 rounded">avi-dashboard/.env.local</code> ファイルで管理されています。
-          バックエンドの環境変数は Fly.io のダッシュボードで設定してください。
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function SuperAdminEmailSettings() {
-  return (
-    <div className="space-y-5">
-      <div className="p-5 border-2 border-dashed border-gray-200 rounded-xl text-center">
-        <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <p className="text-gray-700 font-medium text-sm">メール送信設定（未設定）</p>
-        <p className="text-xs text-gray-500 mt-1 leading-relaxed max-w-sm mx-auto">
-          招待リンクをメールで自動送信するには、SMTP設定が必要です。
-          Gmail や SendGrid などのSMTPサービスを設定することで有効になります。
-        </p>
-      </div>
-      <div className="space-y-3">
-        {[
-          { label: 'SMTPホスト', placeholder: 'smtp.gmail.com', disabled: true },
-          { label: 'SMTPポート', placeholder: '587', disabled: true },
-          { label: '送信元メールアドレス', placeholder: 'noreply@avi.tokyo', disabled: true },
-          { label: 'ユーザー名', placeholder: 'your@gmail.com', disabled: true },
-          { label: 'パスワード / アプリパスワード', placeholder: '••••••••', disabled: true },
-        ].map(field => (
-          <div key={field.label}>
-            <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
-            <input
-              type="text"
-              placeholder={field.placeholder}
-              disabled={field.disabled}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
-            />
-          </div>
-        ))}
-        <button disabled className="px-4 py-2 bg-gray-200 text-gray-400 text-sm font-medium rounded-lg cursor-not-allowed">
-          保存（実装予定）
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function SuperAdminApiSettings() {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-500">バックエンドで使用しているAPIキーの確認と管理。実際の変更はFly.ioの環境変数から行ってください。</p>
-      <div className="space-y-3">
-        {[
-          { label: 'OpenAI API Key', key: 'OPENAI_API_KEY', desc: 'AIチャットボットの応答生成に使用' },
-          { label: 'LINE Channel Access Token', key: 'LINE_CHANNEL_ACCESS_TOKEN', desc: 'LINEメッセージの送受信に使用' },
-          { label: 'LINE Channel Secret', key: 'LINE_CHANNEL_SECRET', desc: 'LINEウェブフックの署名検証に使用' },
-        ].map(item => (
-          <div key={item.key} className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-            <p className="text-sm font-medium text-gray-900">{item.label}</p>
-            <p className="text-xs text-gray-500 mt-0.5 mb-2">{item.desc}</p>
-            <code className="text-xs bg-white border border-gray-200 rounded px-2 py-1 text-gray-500">
-              {item.key} = ••••••••（Fly.io環境変数）
-            </code>
-          </div>
-        ))}
-      </div>
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-        <p className="text-xs font-medium text-amber-800 mb-1">APIキーの変更方法</p>
-        <p className="text-xs text-amber-700">Fly.ioダッシュボード → avi-bot-clinic → Secrets から変更できます。</p>
-      </div>
-    </div>
-  )
-}
-
 // ── メインコンポーネント ───────────────────────────────────────────────────────
+
+function ComingSoon() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+        <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <p className="text-gray-700 font-semibold text-sm">実装予定です</p>
+      <p className="text-xs text-gray-400 mt-1">しばらくお待ちください</p>
+    </div>
+  )
+}
 
 export default function Settings() {
   const { user } = useAuth()
@@ -294,8 +204,19 @@ export default function Settings() {
   const clinicTabs = ['支払い設定', 'API管理']
   const [activeClinicTab, setActiveClinicTab] = useState(clinicTabs[0])
 
-  // 会社全体（super_admin）には設定なし
-  if (isSuperAdmin) return null
+  // 会社全体（super_admin）には設定なし → Coming Soon
+  if (isSuperAdmin) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">設定</h1>
+        </div>
+        <Card className="p-6">
+          <ComingSoon />
+        </Card>
+      </div>
+    )
+  }
 
   const renderClinicContent = () => {
     switch (activeClinicTab) {

@@ -30,8 +30,12 @@ import SegmentBroadcast from './pages/SegmentBroadcast'
 
 // 共通
 import Analytics from './pages/Analytics'
-import Settings from './pages/Settings'
 import PublicIntakeForm from './pages/PublicIntakeForm'
+
+// 設定（モード別）
+import SettingsGlobal  from './pages/settings/SettingsGlobal'
+import SettingsCompany from './pages/settings/SettingsCompany'
+import SettingsClinic  from './pages/settings/SettingsClinic'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -76,6 +80,7 @@ function AppRoutes() {
           <Route path="clinics" element={<ClinicsManagement />} />
           <Route path="invite" element={<InviteClinic />} />
           <Route path="platform" element={<PlatformAdmin />} />
+          <Route path="settings" element={<SettingsGlobal />} />
         </>}
 
         {/* 会社全体専用 */}
@@ -84,6 +89,7 @@ function AppRoutes() {
           <Route path="employees" element={<EmployeeManagement />} />
           <Route path="bulk-edit" element={<BulkEdit />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<SettingsCompany />} />
         </>}
 
         {/* 店舗専用 */}
@@ -95,10 +101,8 @@ function AppRoutes() {
           <Route path="bot-settings" element={<BotSettings />} />
           <Route path="intake-form" element={<IntakeFormManagement />} />
           <Route path="broadcast" element={<SegmentBroadcast />} />
+          <Route path="settings" element={<SettingsClinic />} />
         </>}
-
-        {/* 共通 */}
-        <Route path="settings" element={<Settings />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

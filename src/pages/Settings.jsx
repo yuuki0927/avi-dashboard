@@ -291,54 +291,16 @@ export default function Settings() {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'super_admin'
 
-  const adminTabs = ['システム設定', 'メール送信', 'API・連携']
-  const [activeTab, setActiveTab] = useState(adminTabs[0])
-
   const clinicTabs = ['支払い設定', 'API管理']
   const [activeClinicTab, setActiveClinicTab] = useState(clinicTabs[0])
 
-  if (!isSuperAdmin) {
-    const renderClinicContent = () => {
-      switch (activeClinicTab) {
-        case '支払い設定': return <PaymentSettings />
-        case 'API管理': return <ApiManagement />
-        default: return null
-      }
-    }
+  // 会社全体（super_admin）には設定なし
+  if (isSuperAdmin) return null
 
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">設定</h1>
-          <p className="text-sm text-gray-500 mt-1">クリニックの設定を管理します</p>
-        </div>
-
-        <div className="flex gap-1 bg-white border border-gray-200 p-1 rounded-xl overflow-x-auto">
-          {clinicTabs.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveClinicTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                activeClinicTab === tab ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        <Card className="p-6">
-          {renderClinicContent()}
-        </Card>
-      </div>
-    )
-  }
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'システム設定': return <SuperAdminSystemSettings />
-      case 'メール送信': return <SuperAdminEmailSettings />
-      case 'API・連携': return <SuperAdminApiSettings />
+  const renderClinicContent = () => {
+    switch (activeClinicTab) {
+      case '支払い設定': return <PaymentSettings />
+      case 'API管理': return <ApiManagement />
       default: return null
     }
   }
@@ -347,16 +309,16 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">設定</h1>
-        <p className="text-sm text-gray-500 mt-1">システム設定・API連携・メール設定を管理します</p>
+        <p className="text-sm text-gray-500 mt-1">クリニックの設定を管理します</p>
       </div>
 
       <div className="flex gap-1 bg-white border border-gray-200 p-1 rounded-xl overflow-x-auto">
-        {adminTabs.map(tab => (
+        {clinicTabs.map(tab => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveClinicTab(tab)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-              activeTab === tab ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              activeClinicTab === tab ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             {tab}
@@ -365,7 +327,7 @@ export default function Settings() {
       </div>
 
       <Card className="p-6">
-        {renderContent()}
+        {renderClinicContent()}
       </Card>
     </div>
   )

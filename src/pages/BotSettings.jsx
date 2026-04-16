@@ -365,6 +365,8 @@ function LineTab() {
       const r = await api.get(`${CLINIC_API}/line-settings`)
       setMasked({ channel_access_token_masked: r.data.channel_access_token_masked || '', channel_secret_masked: r.data.channel_secret_masked || '' })
       setForm(f => ({ ...f, channel_access_token: '', channel_secret: '' }))
+      setShowToken(false)
+      setShowSecret(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } finally { setSaving(false) }

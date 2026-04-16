@@ -216,12 +216,15 @@ function AutoRulesTab() {
         <p className="font-semibold mt-2">⑤ 承認モード（送信前の確認方法）</p>
         <ul className="space-y-1.5 list-none">
           <li>・<span className="font-medium">サンプル確認（推奨）</span>：AIが全員分のメッセージを生成した後、ランダムで5件だけ「承認キュー」タブに届きます。5件を読んで内容に問題なければ「全件承認」ボタンを押すだけで全員に一斉送信。<span className="font-medium">運用初期は必ずこちらで始めてください。</span></li>
-          <li>・<span className="font-medium">自動送信</span>：承認不要。深夜0時に条件にマッチしたら翌朝には既に送信完了しています。AIへの信頼が確立したルールだけに使ってください。</li>
+          <li>・<span className="font-medium">自動送信</span>：承認不要。⑦で指定した時刻に条件にマッチしたお客様へ自動送信されます。AIへの信頼が確立したルールだけに使ってください。</li>
           <li>・<span className="font-medium">全件手動確認</span>：1件ずつ中身を確認してから送ります。VIPや特別なケースで使いますが、件数が多いと作業が大変なので注意。</li>
         </ul>
 
         <p className="font-semibold mt-2">⑥ 再送防止（クールダウン）</p>
         <p>同じお客様に短期間で何度も同じルールのメッセージが届かないよう、N日間は再送しない設定です。例：30日設定なら、一度送ったお客様は30日後まで同じルールでは対象になりません。条件に合い続けても再送されないので安心です。</p>
+
+        <p className="font-semibold mt-2">⑦ 送信時刻</p>
+        <p>メッセージを送信する時刻を日本時間で指定します。スケジューラーが毎分チェックし、指定した時刻ぴったりに自動送信します。</p>
 
         <p className="font-semibold mt-2">ルール作成のコツ</p>
         <ul className="space-y-1 list-none">
@@ -292,6 +295,7 @@ function AutoRulesTab() {
                     <span>メッセージ：{MESSAGE_MODES.find(m=>m.value===rule.message_mode)?.label || rule.message_mode}</span>
                     <span>承認：{APPROVAL_MODES.find(m=>m.value===rule.approval_mode)?.label.split('（')[0]}</span>
                     <span>再送防止：{rule.cooldown_days}日</span>
+                    <span>送信時刻：{String(rule.send_hour ?? 10).padStart(2,'0')}:{String(rule.send_minute ?? 0).padStart(2,'0')}</span>
                     {previewCounts[rule.id] !== undefined && (
                       <span className="text-primary-600 font-medium">現在の対象：{previewCounts[rule.id]}人</span>
                     )}
@@ -344,6 +348,8 @@ function RuleModal({ initial, onClose, onSaved }) {
     message_template: initial?.message_template || '',
     approval_mode: initial?.approval_mode || 'sample',
     cooldown_days: initial?.cooldown_days ?? 30,
+    send_hour:   initial?.send_hour   ?? 10,
+    send_minute: initial?.send_minute ?? 0,
     is_active: initial?.is_active ?? 1,
   })
   const [saving, setSaving] = useState(false)
@@ -509,6 +515,25 @@ function RuleModal({ initial, onClose, onSaved }) {
                 className="input-field w-20 text-sm text-center" />
               <span className="text-sm text-gray-600">日間は再送しない</span>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">⑦ 送信時刻（日本時間）</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number" min="0" max="23" value={form.send_hour}
+                onChange={e => set('send_hour', Math.min(23, Math.max(0, Number(e.target.value))))}
+                className="input-field w-20 text-sm text-center"
+              />
+              <span className="text-sm text-gray-600">時</span>
+              <input
+                type="number" min="0" max="59" value={form.send_minute}
+                onChange={e => set('send_minute', Math.min(59, Math.max(0, Number(e.target.value))))}
+                className="input-field w-20 text-sm text-center"
+              />
+              <span className="text-sm text-gray-600">分</span>
+            </div>
+            <p className="text-xs text-gray-400">スケジューラーが毎分チェックし、指定時刻に自動送信します</p>
           </div>
 
           <div className="flex gap-3 pt-2">

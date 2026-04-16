@@ -185,8 +185,33 @@ function KnowledgeTab({ clinicId }) {
   return (
     <div className="space-y-5">
       <InfoBanner storageKey="bot-knowledge">
-        <p>ここでは、AIに覚えさせたい追加情報を登録・管理します。料金表・営業時間はシステムが自動で読み込むため登録不要です。それ以外の情報（よくある質問、施術説明、アクセス情報、注意事項など）をここで管理します。</p>
-        <p>登録した知識はカテゴリやキーワードで整理でき、AIがお客様の質問に対して適切な情報を選んで回答します。詳しくはメインメニューの「ナレッジベース」ページから管理できます。</p>
+        <p className="font-semibold mb-2">ナレッジベースとは？</p>
+        <p>AIに覚えさせたい追加情報を登録・管理する場所です。料金表・営業時間・キャンペーン情報はシステムが自動で読み込むため登録不要です。それ以外のクリニック固有の情報をここで補足します。</p>
+
+        <p className="font-semibold mt-3 mb-1">登録すると効果的な情報の例</p>
+        <ul className="space-y-0.5 list-none">
+          <li>・よくある質問と回答（「初めてでも大丈夫？」「痛みはありますか？」など）</li>
+          <li>・各施術の詳しい説明・効果・向いている人</li>
+          <li>・アクセス・駐車場・最寄り駅からの道順</li>
+          <li>・予約・キャンセルポリシー</li>
+          <li>・施術後の注意事項・アフターケア</li>
+          <li>・スタッフ紹介・院長プロフィール</li>
+          <li>・他院との違い・クリニックのこだわり</li>
+        </ul>
+
+        <p className="font-semibold mt-3 mb-1">AIが使うタイミング</p>
+        <p>お客様の質問に含まれる言葉と、ナレッジの<span className="font-medium">タイトル・本文・キーワード</span>がマッチしたとき、その知識を参照して回答します。キーワードを充実させるほど、より的確に使われるようになります。</p>
+
+        <p className="font-semibold mt-3 mb-1">カテゴリの活用</p>
+        <p>「施術説明」「よくある質問」「アクセス」などカテゴリを分けて登録すると、管理しやすくなります。カテゴリ名は自由に設定できます。</p>
+
+        <p className="font-semibold mt-3 mb-1">登録のコツ</p>
+        <ul className="space-y-0.5 list-none">
+          <li>・タイトルは短く、内容を一言で表す（例：「ダーマペンの効果と向いている人」）</li>
+          <li>・本文はお客様に話しかけるような自然な文体で書く</li>
+          <li>・キーワードには類義語・よくある誤字も入れておくと検索精度が上がる</li>
+          <li>・1件に詰め込みすぎず、テーマごとに分けて登録するのがおすすめ</li>
+        </ul>
       </InfoBanner>
 
       {/* Filter bar */}
@@ -222,10 +247,6 @@ function KnowledgeTab({ clinicId }) {
           </button>
         ))}
       </div>
-
-      <InfoBanner storageKey="bot-knowledge-list">
-        <p>ここに登録した情報は、お客様からの質問に対してAIが自動で参照して回答します。タイトル・本文・キーワードのいずれかに含まれる言葉が質問とマッチしたとき、その知識が使われます。</p>
-      </InfoBanner>
 
       {loading ? (
         <div className="flex items-center justify-center h-48 text-gray-400 text-sm">読み込み中...</div>

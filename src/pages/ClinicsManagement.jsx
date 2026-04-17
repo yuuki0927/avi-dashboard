@@ -12,7 +12,7 @@ const DAY_LABELS = { mon: '月', tue: '火', wed: '水', thu: '木', fri: '金',
 const DEFAULT_HOURS = Object.fromEntries(
   DAYS.map(d => [d, { open: '10:00', close: '19:00', closed: false }])
 )
-const DEFAULT_CLOSED_DAYS = { weekdays: [], note: '' }
+const DEFAULT_CLOSED_DAYS = { note: '' }
 
 const EMPTY_CLINIC_FORM = {
   name: '', address: '', map_url: '', phone: '',
@@ -56,9 +56,9 @@ function parseClosedDays(raw) {
   if (!raw) return { ...DEFAULT_CLOSED_DAYS }
   try {
     const data = JSON.parse(raw)
-    return { weekdays: data.weekdays || [], note: data.note || '' }
+    return { note: data.note || '' }
   } catch {
-    return { weekdays: [], note: raw }
+    return { note: typeof raw === 'string' ? raw : '' }
   }
 }
 
@@ -180,11 +180,6 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
   const setHourDay = (day, field, val) => setForm(f => ({
     ...f, hours: { ...f.hours, [day]: { ...f.hours[day], [field]: val } }
   }))
-  const toggleClosedWeekday = (day) => setForm(f => {
-    const cur = f.closed_days.weekdays
-    const next = cur.includes(day) ? cur.filter(d => d !== day) : [...cur, day]
-    return { ...f, closed_days: { ...f.closed_days, weekdays: next } }
-  })
 
   const handleSave = async () => {
     if (!form.name.trim()) { setError('店舗名は必須です'); return }
@@ -277,7 +272,7 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
                       onChange={e => setHourDay(day, 'closed', e.target.checked)}
                       className="w-3.5 h-3.5 rounded text-gray-400"
                     />
-                    <span className="text-xs text-gray-500">休診</span>
+                    <span className="text-xs text-gray-500">定休日</span>
                   </label>
                   {!form.hours[day].closed ? (
                     <div className="flex items-center gap-1.5 flex-1">
@@ -303,39 +298,18 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
             </div>
           </section>
 
-          {/* 休業日 */}
+          {/* 特別休業 */}
           <section>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">定期休業日・特別休業</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">毎週の定休日</label>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS.map(day => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => toggleClosedWeekday(day)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        form.closed_days.weekdays.includes(day)
-                          ? 'bg-gray-800 text-white border-gray-800'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                      }`}
-                    >
-                      {DAY_LABELS[day]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">特別休業・備考</label>
-                <textarea
-                  value={form.closed_days.note}
-                  onChange={e => setForm(f => ({ ...f, closed_days: { ...f.closed_days, note: e.target.value } }))}
-                  placeholder="例：祝日休診、年末年始（12/29〜1/3）"
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                />
-              </div>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">特別休業・臨時休業</h3>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">備考</label>
+              <textarea
+                value={form.closed_days.note}
+                onChange={e => setForm(f => ({ ...f, closed_days: { note: e.target.value } }))}
+                placeholder="例：祝日休診、年末年始（12/29〜1/3）"
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              />
             </div>
           </section>
 

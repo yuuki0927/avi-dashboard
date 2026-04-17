@@ -31,6 +31,7 @@ import SegmentBroadcast from './pages/SegmentBroadcast'
 // 共通
 import Analytics from './pages/Analytics'
 import PublicIntakeForm from './pages/PublicIntakeForm'
+import ResetPassword from './pages/ResetPassword'
 
 // 設定（モード別）
 import SettingsGlobal  from './pages/settings/SettingsGlobal'
@@ -61,6 +62,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/form/:token" element={<PublicIntakeForm />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup/clinic/:token" element={<Signup />} />
       <Route path="/signup/:token" element={<Signup />} />

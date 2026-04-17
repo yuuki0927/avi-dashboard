@@ -15,7 +15,7 @@ const DEFAULT_HOURS = Object.fromEntries(
 const DEFAULT_CLOSED_DAYS = { note: '' }
 
 const EMPTY_CLINIC_FORM = {
-  name: '', address: '', map_url: '', phone: '',
+  name: '', address: '', map_url: '', phone: '', contact_email: '',
   hours: DEFAULT_HOURS,
   closed_days: DEFAULT_CLOSED_DAYS,
   password: '', confirm_password: '',
@@ -165,6 +165,7 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
         address: editing.address || '',
         map_url: editing.map_url || '',
         phone: editing.phone || '',
+        contact_email: editing.contact_email || '',
         hours: parseHours(editing.hours),
         closed_days: parseClosedDays(editing.closed_days),
         password: '',
@@ -193,6 +194,7 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
       address: form.address.trim(),
       map_url: form.map_url.trim(),
       phone: form.phone.trim(),
+      contact_email: form.contact_email.trim(),
       hours: serializeHours(form.hours),
       closed_days: serializeClosedDays(form.closed_days),
     }
@@ -251,6 +253,15 @@ function ClinicFormModal({ editing, onClose, onSaved }) {
                 <label className="block text-xs font-medium text-gray-600 mb-1">電話番号</label>
                 <input type="tel" value={form.phone} onChange={e => setField('phone', e.target.value)}
                   placeholder="例：03-1234-5678"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  連絡先メールアドレス
+                  <span className="ml-1 text-gray-400 font-normal">（パスワードリセット用）</span>
+                </label>
+                <input type="email" value={form.contact_email} onChange={e => setField('contact_email', e.target.value)}
+                  placeholder="例：shibuya@example.com"
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
               </div>
             </div>
@@ -358,6 +369,8 @@ function ClinicAdminView() {
   const [showFormModal, setShowFormModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [pwdTarget, setPwdTarget] = useState(null)
+  const [resetSending, setResetSending] = useState(null) // clinic.id
+  const [resetDone, setResetDone] = useState(null)   // clinic.id
 
   const load = () => {
     setLoading(true)
@@ -375,6 +388,17 @@ function ClinicAdminView() {
   const openNew = () => { setEditing(null); setShowFormModal(true) }
   const openEdit = (c) => { setEditing(c); setShowFormModal(true) }
   const handleSaved = () => { setShowFormModal(false); load() }
+
+  const handleResetPassword = async (clinic) => {
+    setResetSending(clinic.id)
+    try {
+      await api.post(`${BASE}/api/group/clinics/${clinic.id}/reset-password`)
+      setResetDone(clinic.id)
+      setTimeout(() => setResetDone(null), 3000)
+    } catch (e) {
+      alert(e.response?.data?.error || 'メール送信に失敗しました')
+    } finally { setResetSending(null) }
+  }
 
   if (loading) return <div className="flex items-center justify-center h-64 text-gray-400 text-sm">読み込み中...</div>
 
@@ -460,6 +484,26 @@ function ClinicAdminView() {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
+                </button>
+                <button
+                  onClick={() => handleResetPassword(clinic)}
+                  disabled={resetSending === clinic.id}
+                  className={`px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors ${resetDone === clinic.id ? 'text-green-600 border-green-200 bg-green-50' : 'text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                  title="パスワードリセットメールを送信"
+                >
+                  {resetDone === clinic.id ? (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : resetSending === clinic.id ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>

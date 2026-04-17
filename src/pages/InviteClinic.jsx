@@ -83,13 +83,13 @@ export default function InviteClinic() {
 
       {/* メール送信について（開発者向けのみ） */}
       {isSuperAdmin && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
-          <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          <div className="text-xs text-blue-800 leading-relaxed">
-            <p className="font-medium mb-0.5">招待URLの送付について</p>
-            <p>現在、招待URLの自動メール送信は未設定です。発行後にURLをコピーして、直接クライアントへ共有してください。自動メール送信を有効にするにはSMTP設定が必要です（設定メニューから）。</p>
+          <div className="text-xs text-green-800 leading-relaxed">
+            <p className="font-medium mb-0.5">招待メールが自動送信されます</p>
+            <p>発行すると登録用URLを記載したメールが自動的にクライアントへ送信されます。念のためURLのコピーも可能です。</p>
           </div>
         </div>
       )}
@@ -132,7 +132,7 @@ export default function InviteClinic() {
 
         {result && (
           <div className="mt-5 p-4 bg-green-50 border border-green-200 rounded-xl space-y-3">
-            <p className="text-sm font-semibold text-green-800">✓ 招待リンクを発行しました</p>
+            <p className="text-sm font-semibold text-green-800">✓ 招待リンクを発行し、メールを送信しました</p>
             <div>
               <p className="text-xs text-gray-500 mb-1">招待URL（有効期限: {result.expires_at}まで）</p>
               <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export default function InviteClinic() {
                 </button>
               </div>
             </div>
-            <p className="text-xs text-gray-500">このURLをクライアントに直接共有してください。</p>
+            <p className="text-xs text-gray-500">招待メールを送信しました。URLは念のためバックアップとしてコピーできます。</p>
           </div>
         )}
       </div>

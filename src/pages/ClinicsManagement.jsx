@@ -639,7 +639,16 @@ function SuperAdminView() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-800">{clinic.name}</p>
-                          {clinic.address && <p className="text-xs text-gray-400">{clinic.address}</p>}
+                          {clinic.address && <p className="text-xs text-gray-400 truncate">{clinic.address}</p>}
+                        </div>
+                        {/* ヘルスバッジ */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${clinic.line_connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                            LINE{clinic.line_connected ? ' ✓' : ' —'}
+                          </span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${(clinic.knowledge_count || 0) > 0 ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-600'}`}>
+                            知識{clinic.knowledge_count || 0}
+                          </span>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor(clinic.status)}`}>
                           {statusLabel(clinic.status)}
